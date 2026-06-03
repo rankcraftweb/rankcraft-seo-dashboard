@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RankCraft SEO Dashboard
 
-## Getting Started
+A full-stack Local SEO operations dashboard built as a real internal tool concept for tracking client projects, service pages, SEO tasks, reports, and workflow progress.
 
-First, run the development server:
+## Live Demo
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+https://rankcraft-seo-dashboard.vercel.app
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Project Purpose
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+RankCraft SEO Dashboard was developed to solve a real workflow problem in local SEO operations: keeping track of multiple client projects, service-page optimization tasks, indexing progress, and client-ready reports in one organized dashboard.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The project is currently deployed as a portfolio MVP, but it is designed around real workflow needs from local SEO and service-based business website projects.
 
-## Learn More
+## Core Features
 
-To learn more about Next.js, take a look at the following resources:
+- Dynamic dashboard overview
+- Client SEO project tracking
+- Service page tracker
+- Metadata status tracking
+- Image alt text status tracking
+- Internal link status tracking
+- Schema preparation status tracking
+- Indexing status tracking
+- Client report generator
+- Individual report details pages
+- Copy report functionality
+- Add project form
+- Add service page form
+- Add report form
+- Supabase-powered database
+- Vercel deployment
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Tech Stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Next.js
+- TypeScript
+- Tailwind CSS
+- Supabase
+- Vercel
+- GitHub
 
-## Deploy on Vercel
+## Pages Included
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Home
+- Dashboard
+- Projects
+- Add Project
+- Service Pages
+- Add Service Page
+- Reports
+- Add Report
+- Report Details
+- Settings
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Why This Project Is Not Generic
+
+Most portfolio projects are static landing pages or simple CRUD apps. RankCraft SEO Dashboard is different because it is based on a real operational workflow:
+
+- Managing multiple local SEO clients
+- Tracking service-page optimization progress
+- Monitoring metadata, image alt text, schema, internal links, and indexing
+- Preparing client-ready reports
+- Organizing SEO implementation work in a SaaS-style dashboard
+
+This project reflects the kind of work handled by a WordPress developer, technical SEO specialist, and local SEO implementer.
+
+## Current MVP Status
+
+Completed:
+
+- Next.js app setup
+- Tailwind dashboard layout
+- Supabase database setup
+- Projects table integration
+- Service pages table integration
+- Reports table integration
+- Add forms for projects, service pages, and reports
+- Dynamic dashboard stats
+- Report details page
+- Copy report button
+- GitHub repository setup
+- Vercel live deployment
+
+## Future Improvements
+
+- Authentication
+- Protected dashboard routes
+- Edit and delete functionality
+- Project detail pages
+- Search and filters
+- Status analytics
+- PDF report export
+- User roles
+- Better report formatting
+- Real onboarding workflow
+
+## Author
+
+Built by Jan Christopher Buen / RankCraft Web.
