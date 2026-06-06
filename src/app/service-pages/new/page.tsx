@@ -1,24 +1,30 @@
-import DashboardShell from "@/components/DashboardShell";
-import { supabase } from "@/lib/supabase";
-import { revalidatePath } from "next/cache";
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { buttonStyles, formStyles } from "@/lib/ui";
+import DashboardShell from "@/components/DashboardShell";
 
 type Project = {
   id: string;
   business_name: string;
 };
 
+const statusOptions = ["Pending", "In Progress", "Done", "Requested"];
+
 async function createServicePage(formData: FormData) {
   "use server";
 
-  const projectId = formData.get("project_id") as string;
-  const serviceName = formData.get("service_name") as string;
-  const pageUrl = formData.get("page_url") as string;
-  const metaStatus = formData.get("meta_status") as string;
-  const altTextStatus = formData.get("alt_text_status") as string;
-  const internalLinkStatus = formData.get("internal_link_status") as string;
-  const schemaStatus = formData.get("schema_status") as string;
-  const indexingStatus = formData.get("indexing_status") as string;
+  const projectId = String(formData.get("project_id") || "").trim();
+  const serviceName = String(formData.get("service_name") || "").trim();
+  const pageUrl = String(formData.get("page_url") || "").trim();
+
+  const metaStatus = String(formData.get("meta_status") || "Pending");
+  const altTextStatus = String(formData.get("alt_text_status") || "Pending");
+  const internalLinkStatus = String(
+    formData.get("internal_link_status") || "Pending",
+  );
+  const schemaStatus = String(formData.get("schema_status") || "Pending");
+  const indexingStatus = String(formData.get("indexing_status") || "Pending");
 
   if (!projectId || !serviceName) {
     throw new Error("Project and service name are required.");
@@ -27,7 +33,7 @@ async function createServicePage(formData: FormData) {
   const { error } = await supabase.from("service_pages").insert({
     project_id: projectId,
     service_name: serviceName,
-    page_url: pageUrl,
+    page_url: pageUrl || null,
     meta_status: metaStatus,
     alt_text_status: altTextStatus,
     internal_link_status: internalLinkStatus,
@@ -39,12 +45,50 @@ async function createServicePage(formData: FormData) {
     throw new Error(error.message);
   }
 
-  revalidatePath("/service-pages");
-  revalidatePath("/dashboard");
-  redirect("/service-pages");
+  redirect(`/projects/${projectId}`);
 }
 
-const statusOptions = ["Pending", "In Progress", "Done", "Requested"];
+function Field({
+  label,
+  name,
+  placeholder,
+  type = "text",
+  required = false,
+}: {
+  label: string;
+  name: string;
+  placeholder: string;
+  type?: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className={formStyles.label}>{label}</span>
+      <input
+        type={type}
+        name={name}
+        required={required}
+        placeholder={placeholder}
+        className={formStyles.input}
+      />
+    </label>
+  );
+}
+
+function StatusSelect({ label, name }: { label: string; name: string }) {
+  return (
+    <label className="block">
+      <span className={formStyles.label}>{label}</span>
+      <select name={name} defaultValue="Pending" className={formStyles.input}>
+        {statusOptions.map((status) => (
+          <option key={status} value={status}>
+            {status}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
 
 export default async function NewServicePagePage() {
   const { data: projects, error } = await supabase
@@ -55,28 +99,40 @@ export default async function NewServicePagePage() {
   if (error) {
     return (
       <DashboardShell>
-        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6">
-          <h1 className="text-xl font-bold text-red-300">
-            Error loading projects
-          </h1>
-          <p className="mt-2 text-sm text-red-200">{error.message}</p>
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-red-200">
+          <h1 className="text-2xl font-bold">Unable to load projects</h1>
+          <p className="mt-3 text-sm">
+            Please check your Supabase connection or table permissions.
+          </p>
         </div>
       </DashboardShell>
     );
   }
 
+  const projectList = (projects as Project[] | null) || [];
+
   return (
     <DashboardShell>
-      <div className="mx-auto max-w-3xl">
-        <div className="mb-10">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">
+      <div className="mx-auto max-w-4xl space-y-8">
+        <div>
+          <Link
+            href="/service-pages"
+            className="text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
+          >
+            ← Back to Service Pages
+          </Link>
+
+          <p className="mt-8 text-sm font-bold uppercase tracking-[0.4em] text-cyan-400">
             New Service Page
           </p>
 
-          <h1 className="mt-3 text-3xl font-bold">Add Service Page</h1>
+          <h1 className="mt-4 text-4xl font-bold tracking-tight text-white">
+            Add Service Page
+          </h1>
 
-          <p className="mt-2 text-slate-400">
-            Add a service page and track its SEO optimization status.
+          <p className="mt-3 max-w-2xl text-slate-300">
+            Add a service page to a project and track its metadata, alt text,
+            internal links, schema, and indexing progress.
           </p>
         </div>
 
@@ -85,109 +141,57 @@ export default async function NewServicePagePage() {
           className="rounded-2xl border border-slate-800 bg-slate-900 p-6"
         >
           <div className="grid gap-6">
-            <div>
-              <label
-                htmlFor="project_id"
-                className="block text-sm font-semibold text-slate-300"
-              >
-                Project
-              </label>
-
+            <label className="block">
+              <span className={formStyles.label}>Project</span>
               <select
-                id="project_id"
                 name="project_id"
                 required
-                className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400"
+                defaultValue=""
+                className={formStyles.input}
               >
-                <option value="">Select project</option>
-                {(projects as Project[] | null)?.map((project) => (
+                <option value="" disabled>
+                  Select project
+                </option>
+
+                {projectList.map((project) => (
                   <option key={project.id} value={project.id}>
                     {project.business_name}
                   </option>
                 ))}
               </select>
+            </label>
+
+            <Field
+              label="Service Name"
+              name="service_name"
+              placeholder="Example: Paver Sealing"
+              required
+            />
+
+            <Field
+              label="Page URL"
+              name="page_url"
+              placeholder="https://example.com/service-page/"
+              type="url"
+            />
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <StatusSelect label="Meta" name="meta_status" />
+              <StatusSelect label="Alt Text" name="alt_text_status" />
+              <StatusSelect label="Internal Links" name="internal_link_status" />
+              <StatusSelect label="Schema" name="schema_status" />
+              <StatusSelect label="Indexing" name="indexing_status" />
             </div>
+          </div>
 
-            <div>
-              <label
-                htmlFor="service_name"
-                className="block text-sm font-semibold text-slate-300"
-              >
-                Service Name
-              </label>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <button type="submit" className={buttonStyles.primary}>
+              Save Service Page
+            </button>
 
-              <input
-                id="service_name"
-                name="service_name"
-                type="text"
-                required
-                placeholder="Example: Commercial Window Cleaning"
-                className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-400"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="page_url"
-                className="block text-sm font-semibold text-slate-300"
-              >
-                Page URL
-              </label>
-
-              <input
-                id="page_url"
-                name="page_url"
-                type="url"
-                placeholder="https://example.com/service-page/"
-                className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-400"
-              />
-            </div>
-
-            <div className="grid gap-6 sm:grid-cols-2">
-              {[
-                ["meta_status", "Meta"],
-                ["alt_text_status", "Alt Text"],
-                ["internal_link_status", "Internal Links"],
-                ["schema_status", "Schema"],
-                ["indexing_status", "Indexing"],
-              ].map(([name, label]) => (
-                <div key={name}>
-                  <label
-                    htmlFor={name}
-                    className="block text-sm font-semibold text-slate-300"
-                  >
-                    {label}
-                  </label>
-
-                  <select
-                    id={name}
-                    name={name}
-                    defaultValue="Pending"
-                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400"
-                  >
-                    {statusOptions.map((status) => (
-                      <option key={status}>{status}</option>
-                    ))}
-                  </select>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <button
-                type="submit"
-                className="rounded-xl bg-cyan-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-cyan-300"
-              >
-                Save Service Page
-              </button>
-
-              <a
-                href="/service-pages"
-                className="rounded-xl border border-slate-700 px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-slate-800"
-              >
-                Cancel
-              </a>
-            </div>
+            <Link href="/service-pages" className={buttonStyles.secondary}>
+              Cancel
+            </Link>
           </div>
         </form>
       </div>

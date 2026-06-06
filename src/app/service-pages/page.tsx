@@ -1,7 +1,7 @@
-export const dynamic = "force-dynamic";
-
-import DashboardShell from "@/components/DashboardShell";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { buttonStyles } from "@/lib/ui";
+import DashboardShell from "@/components/DashboardShell";
 
 type ProjectRelation =
   | {
@@ -33,9 +33,7 @@ function StatusBadge({ status }: { status: string | null }) {
         : "bg-slate-700 text-slate-300";
 
   return (
-    <span
-      className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass}`}
-    >
+    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass}`}>
       {status ?? "Pending"}
     </span>
   );
@@ -82,82 +80,100 @@ export default async function ServicePagesPage() {
     );
   }
 
+  const servicePageList = (servicePages as ServicePage[] | null) || [];
+
   return (
     <DashboardShell>
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-10 flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
+      <div className="space-y-10">
+        <div className="grid gap-6 xl:grid-cols-[1fr_auto] xl:items-start">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">
+            <p className="text-sm font-bold uppercase tracking-[0.4em] text-cyan-400">
               Service Pages
             </p>
 
-            <h1 className="mt-3 text-3xl font-bold">
+            <h1 className="mt-4 text-4xl font-bold tracking-tight text-white">
               Service Page Tracker
             </h1>
 
-            <p className="mt-2 text-slate-400">
+            <p className="mt-3 max-w-2xl text-slate-300">
               Track SEO completion for service pages, metadata, image alt text,
               internal links, schema, and indexing status.
             </p>
           </div>
 
-          <a
-            href="/service-pages/new"
-            className="inline-flex rounded-xl bg-cyan-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-cyan-300"
-          >
-            Add Service Page
-          </a>
+          <div className="flex flex-wrap gap-3 xl:justify-end">
+            <Link href="/service-pages/new" className={buttonStyles.primary}>
+              Add Service Page
+            </Link>
+          </div>
         </div>
 
         <section className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
           <div className="overflow-x-auto rounded-xl border border-slate-800">
-            <table className="w-full min-w-[1000px] text-left text-sm">
-              <thead className="bg-slate-950 text-slate-400">
-                <tr>
-                  <th className="px-4 py-3">Service</th>
-                  <th className="px-4 py-3">Project</th>
-                  <th className="px-4 py-3">Meta</th>
-                  <th className="px-4 py-3">Alt Text</th>
-                  <th className="px-4 py-3">Internal Links</th>
-                  <th className="px-4 py-3">Schema</th>
-                  <th className="px-4 py-3">Indexing</th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y divide-slate-800">
-                {(servicePages as ServicePage[] | null)?.map((page) => (
-                  <tr key={page.id}>
-                    <td className="px-4 py-4 font-medium">
-                      {page.service_name}
-                    </td>
-
-                    <td className="px-4 py-4 text-slate-400">
-                      {getProjectName(page.projects)}
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <StatusBadge status={page.meta_status} />
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <StatusBadge status={page.alt_text_status} />
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <StatusBadge status={page.internal_link_status} />
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <StatusBadge status={page.schema_status} />
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <StatusBadge status={page.indexing_status} />
-                    </td>
+            {servicePageList.length > 0 ? (
+              <table className="w-full min-w-[1150px] border-collapse text-left text-sm">
+                <thead className="bg-slate-950 text-slate-300">
+                  <tr>
+                    <th className="px-4 py-3">Service</th>
+                    <th className="px-4 py-3">Project</th>
+                    <th className="px-4 py-3">Meta</th>
+                    <th className="px-4 py-3">Alt Text</th>
+                    <th className="px-4 py-3">Internal Links</th>
+                    <th className="px-4 py-3">Schema</th>
+                    <th className="px-4 py-3">Indexing</th>
+                    <th className="px-4 py-3 text-right">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+
+                <tbody className="divide-y divide-slate-800">
+                  {servicePageList.map((page) => (
+                    <tr key={page.id} className="transition hover:bg-slate-950/50">
+                      <td className="px-4 py-4 font-medium text-white">
+                        {page.service_name}
+                      </td>
+
+                      <td className="px-4 py-4 text-slate-300">
+                        {getProjectName(page.projects)}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <StatusBadge status={page.meta_status} />
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <StatusBadge status={page.alt_text_status} />
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <StatusBadge status={page.internal_link_status} />
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <StatusBadge status={page.schema_status} />
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <StatusBadge status={page.indexing_status} />
+                      </td>
+
+                      <td className="px-4 py-4 text-right">
+                        <Link
+                          href={`/service-pages/${page.id}/edit`}
+                          className={buttonStyles.small}
+                        >
+                          Edit
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="bg-slate-950 p-6 text-sm text-slate-400">
+                No service pages found yet. Add your first service page to start
+                tracking SEO progress.
+              </div>
+            )}
           </div>
         </section>
       </div>

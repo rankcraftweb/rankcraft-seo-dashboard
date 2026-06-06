@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { buttonStyles } from "@/lib/ui";
 
 type CopyReportButtonProps = {
   reportBody: string;
@@ -12,20 +13,20 @@ export default function CopyReportButton({
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(reportBody);
-    setCopied(true);
+    try {
+      await navigator.clipboard.writeText(reportBody);
+      setCopied(true);
 
-    setTimeout(() => {
-      setCopied(false);
-    }, 2000);
+      setTimeout(() => {
+        setCopied(false);
+      }, 1500);
+    } catch {
+      alert("Copy failed. Please select the report text manually.");
+    }
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleCopy}
-      className="rounded-xl bg-cyan-400 px-4 py-2 text-sm font-bold text-slate-950 transition hover:bg-cyan-300"
-    >
+    <button type="button" onClick={handleCopy} className={buttonStyles.primary}>
       {copied ? "Copied!" : "Copy Report"}
     </button>
   );

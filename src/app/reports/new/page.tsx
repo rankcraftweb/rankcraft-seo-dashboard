@@ -1,20 +1,23 @@
-import DashboardShell from "@/components/DashboardShell";
-import { supabase } from "@/lib/supabase";
-import { revalidatePath } from "next/cache";
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { buttonStyles, formStyles } from "@/lib/ui";
+import DashboardShell from "@/components/DashboardShell";
 
 type Project = {
   id: string;
   business_name: string;
 };
 
+const statusOptions = ["Draft", "Ready", "Sent", "Archived"];
+
 async function createReport(formData: FormData) {
   "use server";
 
-  const projectId = formData.get("project_id") as string;
-  const reportTitle = formData.get("report_title") as string;
-  const reportBody = formData.get("report_body") as string;
-  const status = formData.get("status") as string;
+  const projectId = String(formData.get("project_id") || "").trim();
+  const reportTitle = String(formData.get("report_title") || "").trim();
+  const reportBody = String(formData.get("report_body") || "").trim();
+  const status = String(formData.get("status") || "Ready").trim();
 
   if (!projectId || !reportTitle || !reportBody) {
     throw new Error("Project, report title, and report body are required.");
@@ -24,16 +27,79 @@ async function createReport(formData: FormData) {
     project_id: projectId,
     report_title: reportTitle,
     report_body: reportBody,
-    status,
+    status: status || "Ready",
   });
 
   if (error) {
     throw new Error(error.message);
   }
 
-  revalidatePath("/reports");
-  revalidatePath("/dashboard");
-  redirect("/reports");
+  redirect(`/projects/${projectId}`);
+}
+
+function Field({
+  label,
+  name,
+  placeholder,
+  required = false,
+}: {
+  label: string;
+  name: string;
+  placeholder: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className={formStyles.label}>{label}</span>
+      <input
+        type="text"
+        name={name}
+        required={required}
+        placeholder={placeholder}
+        className={formStyles.input}
+      />
+    </label>
+  );
+}
+
+function TextArea({
+  label,
+  name,
+  placeholder,
+  required = false,
+}: {
+  label: string;
+  name: string;
+  placeholder: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className={formStyles.label}>{label}</span>
+      <textarea
+        name={name}
+        required={required}
+        placeholder={placeholder}
+        rows={12}
+        className={formStyles.textarea}
+      />
+    </label>
+  );
+}
+
+function StatusSelect() {
+  return (
+    <label className="block">
+      <span className={formStyles.label}>Status</span>
+      <select name="status" defaultValue="Ready" className={formStyles.input}>
+        {statusOptions.map((status) => (
+          <option key={status} value={status}>
+            {status}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
 }
 
 export default async function NewReportPage() {
@@ -45,28 +111,40 @@ export default async function NewReportPage() {
   if (error) {
     return (
       <DashboardShell>
-        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6">
-          <h1 className="text-xl font-bold text-red-300">
-            Error loading projects
-          </h1>
-          <p className="mt-2 text-sm text-red-200">{error.message}</p>
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-red-200">
+          <h1 className="text-2xl font-bold">Unable to load projects</h1>
+          <p className="mt-3 text-sm">
+            Please check your Supabase connection or table permissions.
+          </p>
         </div>
       </DashboardShell>
     );
   }
 
+  const projectList = (projects as Project[] | null) || [];
+
   return (
     <DashboardShell>
-      <div className="mx-auto max-w-3xl">
-        <div className="mb-10">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">
+      <div className="mx-auto max-w-4xl space-y-8">
+        <div>
+          <Link
+            href="/reports"
+            className="text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
+          >
+            ← Back to Reports
+          </Link>
+
+          <p className="mt-8 text-sm font-bold uppercase tracking-[0.4em] text-cyan-400">
             New Report
           </p>
 
-          <h1 className="mt-3 text-3xl font-bold">Generate Client Report</h1>
+          <h1 className="mt-4 text-4xl font-bold tracking-tight text-white">
+            Generate Client Report
+          </h1>
 
-          <p className="mt-2 text-slate-400">
-            Create a client-ready SEO progress update and save it to Supabase.
+          <p className="mt-3 max-w-2xl text-slate-300">
+            Create a client-ready SEO progress update and connect it to an active
+            project.
           </p>
         </div>
 
@@ -75,100 +153,51 @@ export default async function NewReportPage() {
           className="rounded-2xl border border-slate-800 bg-slate-900 p-6"
         >
           <div className="grid gap-6">
-            <div>
-              <label
-                htmlFor="project_id"
-                className="block text-sm font-semibold text-slate-300"
-              >
-                Project
-              </label>
-
+            <label className="block">
+              <span className={formStyles.label}>Project</span>
               <select
-                id="project_id"
                 name="project_id"
                 required
-                className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400"
+                defaultValue=""
+                className={formStyles.input}
               >
-                <option value="">Select project</option>
-                {(projects as Project[] | null)?.map((project) => (
+                <option value="" disabled>
+                  Select project
+                </option>
+
+                {projectList.map((project) => (
                   <option key={project.id} value={project.id}>
                     {project.business_name}
                   </option>
                 ))}
               </select>
-            </div>
+            </label>
 
-            <div>
-              <label
-                htmlFor="report_title"
-                className="block text-sm font-semibold text-slate-300"
-              >
-                Report Title
-              </label>
+            <Field
+              label="Report Title"
+              name="report_title"
+              placeholder="Example: Weekly SEO Progress Report"
+              required
+            />
 
-              <input
-                id="report_title"
-                name="report_title"
-                type="text"
-                required
-                placeholder="Example: SEO Batch Update"
-                className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-400"
-              />
-            </div>
+            <StatusSelect />
 
-            <div>
-              <label
-                htmlFor="report_body"
-                className="block text-sm font-semibold text-slate-300"
-              >
-                Report Body
-              </label>
+            <TextArea
+              label="Report Body"
+              name="report_body"
+              placeholder="Write the client-ready SEO progress update here..."
+              required
+            />
+          </div>
 
-              <textarea
-                id="report_body"
-                name="report_body"
-                required
-                rows={8}
-                placeholder="Example: Completed SEO updates for service pages. Updated metadata, image alt text, internal links, schema preparation, and indexing status."
-                className="mt-2 w-full resize-none rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm leading-7 text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-400"
-              />
-            </div>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <button type="submit" className={buttonStyles.primary}>
+              Save Report
+            </button>
 
-            <div>
-              <label
-                htmlFor="status"
-                className="block text-sm font-semibold text-slate-300"
-              >
-                Status
-              </label>
-
-              <select
-                id="status"
-                name="status"
-                defaultValue="Ready"
-                className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400"
-              >
-                <option>Ready</option>
-                <option>Sent</option>
-                <option>Draft</option>
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <button
-                type="submit"
-                className="rounded-xl bg-cyan-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-cyan-300"
-              >
-                Save Report
-              </button>
-
-              <a
-                href="/reports"
-                className="rounded-xl border border-slate-700 px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-slate-800"
-              >
-                Cancel
-              </a>
-            </div>
+            <Link href="/reports" className={buttonStyles.secondary}>
+              Cancel
+            </Link>
           </div>
         </form>
       </div>

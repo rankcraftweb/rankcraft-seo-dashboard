@@ -1,9 +1,8 @@
-export const dynamic = "force-dynamic";
-
+import Link from "next/link";
+import { supabase } from "@/lib/supabase";
+import { buttonStyles } from "@/lib/ui";
 import DashboardShell from "@/components/DashboardShell";
 import CopyReportButton from "@/components/CopyReportButton";
-import { supabase } from "@/lib/supabase";
-import Link from "next/link";
 
 type ProjectRelation =
   | {
@@ -25,14 +24,14 @@ type Report = {
 
 function StatusBadge({ status }: { status: string | null }) {
   const statusClass =
-    status === "Ready"
-      ? "bg-cyan-400/10 text-cyan-300"
-      : "bg-emerald-400/10 text-emerald-300";
+    status === "Ready" || status === "Sent"
+      ? "bg-emerald-400/10 text-emerald-300"
+      : status === "Draft"
+        ? "bg-cyan-400/10 text-cyan-300"
+        : "bg-slate-700 text-slate-300";
 
   return (
-    <span
-      className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass}`}
-    >
+    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass}`}>
       {status ?? "Ready"}
     </span>
   );
@@ -84,72 +83,79 @@ export default async function ReportsPage() {
     );
   }
 
+  const reportList = (reports as Report[] | null) || [];
+
   return (
     <DashboardShell>
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-10 flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
+      <div className="space-y-10">
+        <div className="grid gap-6 xl:grid-cols-[1fr_auto] xl:items-start">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">
+            <p className="text-sm font-bold uppercase tracking-[0.4em] text-cyan-400">
               Reports
             </p>
 
-            <h1 className="mt-3 text-3xl font-bold">
-              Client Report Generator
+            <h1 className="mt-4 text-4xl font-bold tracking-tight text-white">
+              Client Reports
             </h1>
 
-            <p className="mt-2 text-slate-400">
-              Generate clean SEO progress updates for clients, managers, and
-              end-of-shift reports.
+            <p className="mt-3 max-w-2xl text-slate-300">
+              Create, review, copy, and manage client-ready SEO progress reports
+              connected to active projects.
             </p>
           </div>
 
-          <Link
-            href="/reports/new"
-            className="inline-flex rounded-xl bg-cyan-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-cyan-300"
-          >
-            Generate Report
-          </Link>
+          <div className="flex flex-wrap gap-3 xl:justify-end">
+            <Link href="/reports/new" className={buttonStyles.primary}>
+              Generate Report
+            </Link>
+          </div>
         </div>
 
         <section className="grid gap-6 lg:grid-cols-2">
-          {(reports as Report[] | null)?.map((report) => (
-            <article
-              key={report.id}
-              className="rounded-2xl border border-slate-800 bg-slate-900 p-6"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-xl font-bold">
-                    {report.report_title}
-                  </h2>
+          {reportList.length > 0 ? (
+            reportList.map((report) => (
+              <article
+                key={report.id}
+                className="rounded-2xl border border-slate-800 bg-slate-900 p-6"
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-white">
+                      {report.report_title}
+                    </h2>
 
-                  <p className="mt-2 text-sm text-slate-400">
-                    {getProjectName(report.projects)} •{" "}
-                    {formatDate(report.created_at)}
+                    <p className="mt-2 text-sm text-slate-400">
+                      {getProjectName(report.projects)} •{" "}
+                      {formatDate(report.created_at)}
+                    </p>
+                  </div>
+
+                  <StatusBadge status={report.status} />
+                </div>
+
+                <div className="mt-6 rounded-xl border border-slate-800 bg-slate-950 p-5">
+                  <p className="line-clamp-5 text-sm leading-7 text-slate-300">
+                    {report.report_body}
                   </p>
                 </div>
 
-                <StatusBadge status={report.status} />
-              </div>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <CopyReportButton reportBody={report.report_body} />
 
-              <div className="mt-6 rounded-xl border border-slate-800 bg-slate-950 p-5">
-                <p className="text-sm leading-7 text-slate-300">
-                  {report.report_body}
-                </p>
-              </div>
-
-              <div className="mt-6 flex flex-wrap gap-3">
-                <CopyReportButton reportBody={report.report_body} />
-
-                <Link
-                  href={`/reports/${report.id}`}
-                  className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-slate-800"
-                >
-                  View Details
-                </Link>
-              </div>
-            </article>
-          ))}
+                  <Link
+                    href={`/reports/${report.id}`}
+                    className={buttonStyles.secondary}
+                  >
+                    View Details
+                  </Link>
+                </div>
+              </article>
+            ))
+          ) : (
+            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 text-sm text-slate-400 lg:col-span-2">
+              No reports found yet. Generate your first client-ready SEO report.
+            </div>
+          )}
         </section>
       </div>
     </DashboardShell>
