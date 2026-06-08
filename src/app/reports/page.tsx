@@ -31,7 +31,9 @@ function StatusBadge({ status }: { status: string | null }) {
         : "bg-slate-700 text-slate-300";
 
   return (
-    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass}`}>
+    <span
+      className={`inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-full px-3 py-1 text-[11px] font-semibold ${statusClass}`}
+    >
       {status ?? "Ready"}
     </span>
   );
@@ -51,6 +53,44 @@ function formatDate(date: string) {
     day: "numeric",
     year: "numeric",
   }).format(new Date(date));
+}
+
+function ReportCard({ report }: { report: Report }) {
+  return (
+    <article className="rounded-2xl border border-slate-800 bg-slate-900 p-5 lg:p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h2 className="text-lg font-bold leading-snug text-white lg:text-xl">
+            {report.report_title}
+          </h2>
+
+          <p className="mt-2 text-sm text-slate-400">
+            {getProjectName(report.projects)}
+          </p>
+
+          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            {formatDate(report.created_at)}
+          </p>
+        </div>
+
+        <StatusBadge status={report.status} />
+      </div>
+
+      <div className="mt-5 rounded-xl border border-slate-800 bg-slate-950 p-5">
+        <p className="line-clamp-5 text-sm leading-7 text-slate-300">
+          {report.report_body}
+        </p>
+      </div>
+
+      <div className="mt-6 flex flex-wrap gap-3">
+        <CopyReportButton reportBody={report.report_body} />
+
+        <Link href={`/reports/${report.id}`} className={buttonStyles.secondary}>
+          View Details
+        </Link>
+      </div>
+    </article>
+  );
 }
 
 export default async function ReportsPage() {
@@ -94,7 +134,7 @@ export default async function ReportsPage() {
               Reports
             </p>
 
-            <h1 className="mt-4 text-4xl font-bold tracking-tight text-white">
+            <h1 className="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">
               Client Reports
             </h1>
 
@@ -111,52 +151,17 @@ export default async function ReportsPage() {
           </div>
         </div>
 
-        <section className="grid gap-6 lg:grid-cols-2">
-          {reportList.length > 0 ? (
-            reportList.map((report) => (
-              <article
-                key={report.id}
-                className="rounded-2xl border border-slate-800 bg-slate-900 p-6"
-              >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <h2 className="text-xl font-bold text-white">
-                      {report.report_title}
-                    </h2>
-
-                    <p className="mt-2 text-sm text-slate-400">
-                      {getProjectName(report.projects)} •{" "}
-                      {formatDate(report.created_at)}
-                    </p>
-                  </div>
-
-                  <StatusBadge status={report.status} />
-                </div>
-
-                <div className="mt-6 rounded-xl border border-slate-800 bg-slate-950 p-5">
-                  <p className="line-clamp-5 text-sm leading-7 text-slate-300">
-                    {report.report_body}
-                  </p>
-                </div>
-
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <CopyReportButton reportBody={report.report_body} />
-
-                  <Link
-                    href={`/reports/${report.id}`}
-                    className={buttonStyles.secondary}
-                  >
-                    View Details
-                  </Link>
-                </div>
-              </article>
-            ))
-          ) : (
-            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 text-sm text-slate-400 lg:col-span-2">
-              No reports found yet. Generate your first client-ready SEO report.
-            </div>
-          )}
-        </section>
+        {reportList.length > 0 ? (
+          <section className="grid gap-5 lg:grid-cols-2">
+            {reportList.map((report) => (
+              <ReportCard key={report.id} report={report} />
+            ))}
+          </section>
+        ) : (
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 text-sm text-slate-400">
+            No reports found yet. Generate your first client-ready SEO report.
+          </div>
+        )}
       </div>
     </DashboardShell>
   );
