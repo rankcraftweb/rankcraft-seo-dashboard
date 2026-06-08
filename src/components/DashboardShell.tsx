@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import LogoutButton from "@/components/LogoutButton";
+import { createClient } from "../lib/supabase/server";
 
 type DashboardShellProps = {
   children: React.ReactNode;
@@ -44,24 +47,28 @@ function BrandBlock() {
 function MobileNav() {
   return (
     <header className="sticky top-0 z-40 border-b border-slate-800 bg-slate-950/95 px-4 py-4 backdrop-blur lg:hidden">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-start justify-between gap-4">
         <BrandBlock />
 
-        <Link
-          href="/projects/new"
-          className="inline-flex min-h-[40px] items-center justify-center whitespace-nowrap rounded-xl bg-cyan-400 px-4 py-2 text-xs font-bold text-slate-950 transition hover:bg-cyan-300"
-        >
-          Add Project
-        </Link>
+        <div className="flex shrink-0 flex-col gap-2">
+          <Link
+            href="/projects/new"
+            className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-xl bg-cyan-400 px-4 py-2 text-xs font-bold text-slate-950 transition hover:bg-cyan-300"
+          >
+            Add Project
+          </Link>
+
+          <LogoutButton />
+        </div>
       </div>
 
-      <nav className="mt-4 overflow-x-auto">
-        <div className="flex min-w-max gap-2 pb-1">
+      <nav className="mt-4">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-bold text-slate-200 transition hover:border-cyan-400 hover:text-cyan-300"
+              className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-xs font-bold text-slate-200 transition hover:border-cyan-400 hover:text-cyan-300"
             >
               {item.label}
             </Link>
@@ -89,6 +96,10 @@ function DesktopSidebar() {
         ))}
       </nav>
 
+      <div className="mt-4">
+        <LogoutButton />
+      </div>
+
       <div className="mt-auto rounded-2xl border border-slate-800 bg-slate-900 p-5">
         <p className="text-sm font-bold text-white">Portfolio Project</p>
 
@@ -100,7 +111,19 @@ function DesktopSidebar() {
   );
 }
 
-export default function DashboardShell({ children }: DashboardShellProps) {
+export default async function DashboardShell({
+  children,
+}: DashboardShellProps) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login?redirectTo=/dashboard");
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <MobileNav />
